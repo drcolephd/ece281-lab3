@@ -89,7 +89,7 @@ entity thunderbird_fsm is
       port (
           i_clk, i_reset  : in    std_logic;
           i_left, i_right : in    std_logic;
-          o_led_L, o_led_R : out std_logic_vector(2 downto 0)
+          o_lights_L, o_lights_R : out std_logic_vector(2 downto 0)
       );
   end thunderbird_fsm;
 
@@ -122,28 +122,28 @@ begin
                    (f_S(2) and f_S(1) and not f_S(0)) or
                    (f_S(2) and f_S(1) and f_S(0));
 	--Output logic
-	o_led_L(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	o_lights_L(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
 	              (f_S(2) and not f_S(1) and not f_S(0));
 	                 
-	o_led_L(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
+	o_lights_L(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
 	              (not f_S(2) and f_S(1) and f_S(0)) or
 	              (f_S(2) and not f_S(1) and not f_S(0));
 	              
-	O_led_L(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	o_lights_L(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or
 	              (not f_S(2) and f_S(1) and not f_S(0)) or 
 	              (not f_S(2) and f_S(1) and f_S(0)) or
                   (f_S(2) and not f_S(1) and not f_S(0));
 	         
-	o_led_R(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	o_lights_R(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
                   (f_S(2) and not f_S(1) and f_S(0)) or 
 	              (f_S(2) and f_S(1) and not f_S(0)) or
 	              (f_S(2) and f_S(1) and f_S(0));
 	                 
-	o_led_R(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	o_lights_R(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or
 	              (f_S(2) and f_S(1) and not f_S(0)) or
 	              (f_S(2) and f_S(1) and f_S(0));
 	               
-	o_led_R(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
+	o_lights_R(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
 	              (f_S(2) and f_S(1) and f_S(0));
 	              
     ---------------------------------------------------------------------------------
