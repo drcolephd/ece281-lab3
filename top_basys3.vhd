@@ -109,7 +109,7 @@ begin
 	-- PORT MAPS ----------------------------------------
     thunderbird_inst : thunderbird_fsm
         port map(
-            i_clk => clk,
+            i_clk => w_clk,
             i_reset => btnR,
             i_left => sw(15),
             i_right => sw(0),
