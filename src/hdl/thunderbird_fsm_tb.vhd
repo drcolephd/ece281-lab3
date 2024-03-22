@@ -58,27 +58,113 @@ architecture test_bench of thunderbird_fsm_tb is
 	
 	component thunderbird_fsm is 
 	  port(
-		
+		i_clk, i_reset        : in    std_logic;
+        i_left, i_right       : in    std_logic;
+        o_led_L, o_led_R      : out   std_logic_vector(2 downto 0)
+
 	  );
 	end component thunderbird_fsm;
 
 	-- test I/O signals
+	signal w_left, w_right        : std_logic :='0';
+	signal w_clk, w_reset         : std_logic :='0';
+	signal w_lights_L, w_lights_R : std_logic_vector(2 downto 0):="000";
 	
 	-- constants
-	
+    constant k_clk_period : time := 10 ns;
 	
 begin
-	-- PORT MAPS ----------------------------------------
 	
+	-- PORT MAPS ----------------------------------------
+	uut: thunderbird_fsm
+	port map(
+	   i_clk   => w_clk,
+	   i_reset => w_reset,
+	   i_left  => w_left,
+	   i_right => w_right,
+	   
+	   o_led_L => w_lights_L,
+	   o_led_R => w_lights_R
+	);
 	-----------------------------------------------------
 	
 	-- PROCESSES ----------------------------------------	
     -- Clock process ------------------------------------
-    
+    clk_proc : process
+        begin
+            w_clk <= '0';
+            wait for k_clk_period/2;
+            w_clk <= '1';
+            wait for k_clk_period/2;
+        end process;
 	-----------------------------------------------------
 	
 	-- Test Plan Process --------------------------------
+	sim_proc: process
+	begin
 	
+	w_reset <= '1';
+            wait for k_clk_period*1;
+              assert w_lights_L = "000" report "bad reset left" severity failure;
+              assert w_lights_R = "000" report "bad reset right" severity failure;
+            
+            w_reset <= '0';
+            wait for k_clk_period*1;
+            
+    --left blinker
+    w_left <= '1'; w_right <= '0'; wait for k_clk_period;
+        assert w_lights_L = "001" report "should start left signal sequence" severity failure;
+    w_lights_L <= "001"; wait for k_clk_period;
+        assert w_lights_L = "011" report "2/3 lights should be on" severity failure;
+    w_lights_L <= "011"; wait for k_clk_period;
+        assert w_lights_L = "111" report "full left should be on" severity failure;
+    w_lights_L <= "111"; wait for k_clk_period;
+        assert w_lights_L = "000" report "should reset to default state" severity failure; 
+        
+   --right blinker
+   w_right <= '1'; w_left <= '0'; wait for k_clk_period;
+       assert w_lights_R = "001" report "should start right signal sequence" severity failure;
+   w_lights_R <= "001"; wait for k_clk_period;
+       assert w_lights_R = "011" report "2/3 lights should be on" severity failure;
+   w_lights_R <= "011"; wait for k_clk_period;
+       assert w_lights_R = "111" report "full right should be on" severity failure;
+   w_lights_R <= "111"; wait for k_clk_period;
+       assert w_lights_R = "000" report "should reset to default state" severity failure;
+       
+  --hazard lights
+  w_left <='1'; w_right <='1'; wait for k_clk_period;
+       assert w_lights_L = "111" report "should be hazards left" severity failure;
+       assert w_lights_R = "111" report "should be hazards right" severity failure;
+  w_lights_L <="111"; w_lights_R <= "111"; wait for k_clk_period;
+       assert w_lights_L = "000" report "should return to default left after hazards" severity failure;
+       assert w_lights_R = "000" report "should return to default right after hazards" severity failure;
+            
+           
+  --reset and test blank even if left
+  w_reset <= '1'; w_left <= '1'; wait for k_clk_period; w_reset <= '0';
+       assert w_lights_L = "000" report "bad reset left" severity failure;
+  w_reset <= '1'; w_lights_L <= "001"; wait for k_clk_period; w_reset <= '0';
+       assert w_lights_L = "000" report "didn't interrupt left1 signal on reset" severity failure;
+  w_reset <= '1'; w_lights_L <= "011"; wait for k_clk_period; w_reset <= '0';
+       assert w_lights_L = "000" report "didn't interrupt left2 signal on reset" severity failure;
+  w_reset <= '1'; w_lights_L <= "111"; wait for k_clk_period; w_reset <= '0';
+       assert w_lights_L = "000" report "didn't interrupt left3 signal on reset" severity failure;
+
+  --reset and test blank even if right
+  w_reset <= '1'; w_right <= '1'; wait for k_clk_period; w_reset <= '0';
+     assert w_lights_R = "000" report "bad reset right" severity failure;
+  w_reset <= '1'; w_lights_R <= "001"; wait for k_clk_period; w_reset <= '0';
+     assert w_lights_R = "000" report "didn't interrupt right1 signal on reset" severity failure;
+  w_reset <= '1'; w_lights_R <= "011"; wait for k_clk_period; w_reset <= '0';
+     assert w_lights_R = "000" report "didn't interrupt right2 signal on reset" severity failure;
+  w_reset <= '1'; w_lights_R <= "111"; wait for k_clk_period; w_reset <= '0';
+     assert w_lights_R = "000" report "didn't interrupt right3 signal on reset" severity failure;
+  
+  
+    wait;
+    end process;
+    
+
 	-----------------------------------------------------	
 	
 end test_bench;

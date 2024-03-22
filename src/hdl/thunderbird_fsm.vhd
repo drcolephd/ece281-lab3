@@ -40,14 +40,14 @@
 --|                 --------------------
 --|                  State | Encoding
 --|                 --------------------
---|                  OFF   | 
---|                  ON    | 
---|                  R1    | 
---|                  R2    | 
---|                  R3    | 
---|                  L1    | 
---|                  L2    | 
---|                  L3    | 
+--|                  OFF   | 000
+--|                  ON    | 001
+--|                  L1    | 010
+--|                  L2    | 011
+--|                  L3    | 100
+--|                  R1    | 101
+--|                  R2    | 110
+--|                  R3    | 111
 --|                 --------------------
 --|
 --|
@@ -85,24 +85,79 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
  
-entity thunderbird_fsm is 
-  port(
-	
-  );
-end thunderbird_fsm;
+entity thunderbird_fsm is
+      port (
+          i_clk, i_reset  : in    std_logic;
+          i_left, i_right : in    std_logic;
+          o_led_L, o_led_R : out std_logic_vector(2 downto 0)
+      );
+  end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
+    
+    signal f_S : std_logic_vector(2 downto 0):= (others => '0');
+    signal f_S_next : std_logic_vector(2 downto 0):= (others => '0');
 
+    
 -- CONSTANTS ------------------------------------------------------------------
   
 begin
 
 	-- CONCURRENT STATEMENTS --------------------------------------------------------	
-	
+	--Next State Logic
+	f_S_next(0) <= (not f_S(2) and not f_S(1) and not f_S(0) and not i_left and i_right) or
+	               (not f_S(2) and not f_S(1) and not f_S(0) and i_left and i_right) or
+	               (not f_S(2) and f_S(1) and not f_S(0)) or 
+	               (f_S(2) and not f_S(1) and f_S(0)) or
+	               (f_S(2) and f_S(1) and f_S(0));
+	              
+	f_S_next(1) <= (not f_S(2) and not f_S(1) and not f_S(0) and i_left and not i_right) or
+	               (not f_S(2) and f_S(1) and not f_S(0)) or
+	               (f_S(2) and f_S(1) and not f_S(0)) or
+	               (f_S(2) and f_S(1) and f_S(0));
+	               
+    f_S_next(2) <= (not f_S(2) and not f_S(1) and not f_S(0) and not i_left and i_right) or
+                   (not f_S(2) and f_S(1) and f_S(0)) or
+                   (f_S(2) and not f_S(1) and f_S(0)) or
+                   (f_S(2) and f_S(1) and not f_S(0)) or
+                   (f_S(2) and f_S(1) and f_S(0));
+	--Output logic
+	o_led_L(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	              (f_S(2) and not f_S(1) and not f_S(0));
+	                 
+	o_led_L(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
+	              (not f_S(2) and f_S(1) and f_S(0)) or
+	              (f_S(2) and not f_S(1) and not f_S(0));
+	              
+	O_led_L(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	              (not f_S(2) and f_S(1) and not f_S(0)) or 
+	              (not f_S(2) and f_S(1) and f_S(0)) or
+                  (f_S(2) and not f_S(1) and not f_S(0));
+	         
+	o_led_R(2) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+                  (f_S(2) and not f_S(1) and f_S(0)) or 
+	              (f_S(2) and f_S(1) and not f_S(0)) or
+	              (f_S(2) and f_S(1) and f_S(0));
+	                 
+	o_led_R(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+	              (f_S(2) and f_S(1) and not f_S(0)) or
+	              (f_S(2) and f_S(1) and f_S(0));
+	               
+	o_led_R(0) <= (not f_S(2) and not f_S(1) and f_S(0)) or 
+	              (f_S(2) and f_S(1) and f_S(0));
+	              
     ---------------------------------------------------------------------------------
 	
 	-- PROCESSES --------------------------------------------------------------------
-    
-	-----------------------------------------------------					   
-				  
+    register_proc : process (i_clk,i_reset)
+        begin
+  
+            if i_reset = '1' then
+                f_S <= (others => '0');        -- reset state is off
+            elsif (rising_edge(i_clk)) then
+                f_S <= f_S_next;    -- next state becomes current state
+            end if;
+        end process register_proc;
+	-----------------------------------------------------		
+				   	
 end thunderbird_fsm_arch;

@@ -69,10 +69,10 @@ entity top_basys3 is
 		-- Switches (16 total)
 		sw  	:   in std_logic_vector(15 downto 0); -- sw(15) = left; sw(0) = right
 
-		-- LEDs (16 total)
+		-- LEDs
 		-- taillights (LC, LB, LA, RA, RB, RC)
 		led 	:   out std_logic_vector(15 downto 0);  -- led(15:13) --> L
-                                                        -- led(2:0)   --> R
+		                                                -- led(2:0)   --> R
 		
 		-- Buttons (5 total)
 		--btnC	:	in	std_logic
@@ -86,12 +86,45 @@ end top_basys3;
 architecture top_basys3_arch of top_basys3 is 
   
 	-- declare components
+component thunderbird_fsm is
+    port(
+        i_clk, i_reset : in std_logic:='0';
+        i_left, i_right : in std_logic:='0';
+        
+        o_led_L, o_led_R : out std_logic_vector(2 downto 0)
+    );
+end component thunderbird_fsm;
 
-  
+component clock_divider is
+	generic ( constant k_DIV : natural := 2	);
+	port( 	
+	        i_clk    : in std_logic:='0';		   -- basys3 clk
+			i_reset  : in std_logic:='0';		   -- asynchronous
+			o_clk    : out std_logic:='0'		   -- divided (slow) clock
+    );
+end component clock_divider;
+    
+    signal w_clk : std_logic;
 begin
 	-- PORT MAPS ----------------------------------------
-
-	
+    thunderbird_inst : thunderbird_fsm
+        port map(
+            i_clk => w_clk,
+            i_reset => btnR,
+            i_left => sw(15),
+            i_right => sw(0),
+            
+            o_led_L => led(15 downto 13),
+            o_led_R => led(2 downto 0)
+           
+        );
+	clkdiv_inst : clock_divider 		--instantiation of clock_divider to take 
+        generic map ( k_DIV => 12500000 ) -- 1 Hz clock from 100 MHz
+        port map (                          
+            i_clk   => clk,
+            i_reset => btnL,
+            o_clk   => w_clk
+        );    
 	
 	-- CONCURRENT STATEMENTS ----------------------------
 	
